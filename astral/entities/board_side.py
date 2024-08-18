@@ -1,5 +1,5 @@
-from astral.constants.sizes import CARD_HEIGHT, CARD_DISTANCES, CARD_WIDTH
-from astral.entities import CardPlace
+from astral.constants.sizes import CARD_HEIGHT, CARD_DISTANCES
+from .card_place import CardPlace
 
 
 class BoardSide:

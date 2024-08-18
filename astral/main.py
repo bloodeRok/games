@@ -3,12 +3,16 @@ import sys
 import pygame
 
 from astral.entities.board import Board
+from astral.entities.player import Player
 from astral.game_init import screen
+
+clock = pygame.time.Clock()
 
 
 def start_game():
     game_board = Board()
-
+    radiant = Player(team="radiant")
+    dire = Player(team="dire")
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -17,8 +21,15 @@ def start_game():
 
         screen.fill((255, 255, 255))
         game_board.draw()
+        active_player = dire
+        active_player.update()
+
+        radiant.draw()
+        dire.draw()
 
         pygame.display.update()
+        clock.tick(60)
+
 
 if __name__ == "__main__":
     start_game()
