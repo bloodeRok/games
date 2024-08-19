@@ -10,7 +10,7 @@ from astral.constants.sizes import (
     SCREEN_HEIGHT,
     PORTRAIT_WIDTH, PORTRAIT_DISTANCE, HP_OFFSET, HP_RECT_WIDTH, HP_RECT_HEIGHT,
 )
-from astral.entities import ElementButton, Portrait
+from astral.entities import Element, Portrait
 from astral.game_init import screen
 
 
@@ -20,13 +20,17 @@ class Player:
             raise ValueError("team must be either 'dire' or 'radiant'")
 
         self._team = team
-        self._element_buttons = self.create_element_buttons()
+        self._elements = self.create_element_buttons()
+        self._fire = self._elements["fire"]
+        self._air = self._elements["air"]
+        self._water = self._elements["water"]
+        self._earth = self._elements["earth"]
+        self._light = self._elements["light"]
         self._portrait = self.create_portrait()
         self._font = pygame.font.SysFont('Arial', 24)
         self._hp = 50
 
-    def create_element_buttons(self) -> list[ElementButton]:
-        buttons = []
+    def create_element_buttons(self) -> dict[str, Element]:
         match self._team:
             case "radiant":
                 x = BUTTON_DISTANCE
@@ -37,12 +41,12 @@ class Player:
 
         y = (SCREEN_HEIGHT - (BUTTON_HEIGHT + BUTTON_DISTANCE) * 5) // 2
 
+        elements_dict = {}
         for element in ELEMENTS:
-            button = ElementButton(x=x, y=y, element=element)
-            buttons.append(button)
+            elements_dict[element] = Element(x=x, y=y, element=element)
             y += BUTTON_HEIGHT + BUTTON_DISTANCE
 
-        return buttons
+        return elements_dict
 
     def create_portrait(self) -> Portrait:
         match self._team:
@@ -59,8 +63,6 @@ class Player:
         )
 
     def draw_hp(self) -> None:
-        """Отрисовка прямоугольника с жизнями (HP)."""
-        # Создаем прямоугольник
         hp_rect_x, hp_rect_y = self.__get_initial_hp_rect_position()
         hp_rect = pygame.Rect(
             hp_rect_x,
@@ -103,20 +105,41 @@ class Player:
 
     def update(self) -> None:
         def unpress_all_elements() -> None:
-            for el_button in self._element_buttons:
+            for el_button in self._elements.values():
                 el_button.unpress()
 
         mouse_pos = pygame.mouse.get_pos()
         mouse_click = pygame.mouse.get_pressed()[0]
 
-        for button in self._element_buttons:
+        for button in self._elements.values():
             if mouse_click:
                 if button.collidepoint(mouse_pos):
                     unpress_all_elements()
                     button.press()
 
     def draw(self) -> None:
-        for button in self._element_buttons:
+        for button in self._elements.values():
             button.draw()
         self._portrait.draw()
         self.draw_hp()
+
+    # Геттеры элементов
+    @property
+    def fire(self) -> Element:
+        return self._fire
+
+    @property
+    def water(self) -> Element:
+        return self._water
+
+    @property
+    def air(self) -> Element:
+        return self._air
+
+    @property
+    def earth(self) -> Element:
+        return self._earth
+
+    @property
+    def light(self) -> Element:
+        return self._light
