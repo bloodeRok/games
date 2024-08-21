@@ -1,10 +1,10 @@
 from astral.entities import Element
-from astral.entities.card import Card
+from astral.entities.creature import Card
 
 
 class Mermaid(Card):
     def __init__(self, element: Element) -> None:
-        super().__init__(name="Mermaid", hp=7, attack=1, element=element)
+        super().__init__(name="Mermaid", hp=7, attack=3, element=element)
 
     def end_turn_ability(self) -> None:
         self._element += 1

@@ -11,6 +11,7 @@ class Card:
     ) -> None:
         self._name = name
         self._hp = hp
+        self._max_hp = hp
         self._attack = attack
         self._element = element
 
@@ -18,12 +19,6 @@ class Card:
     @property
     def name(self) -> str:
         return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
-        if not isinstance(value, str):
-            raise ValueError("Имя должно быть строкой.")
-        self._name = value
 
     @property
     def hp(self) -> int:
@@ -36,6 +31,18 @@ class Card:
         if value < 0:
             raise ValueError("HP не может быть отрицательным.")
         self._hp = value
+
+    @property
+    def max_hp(self) -> int:
+        return self._hp
+
+    @max_hp.setter
+    def max_hp(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError("HP быть целым числом.")
+        if value < 0:
+            raise ValueError("HP не может быть отрицательным.")
+        self._max_hp = value
 
     @property
     def attack(self) -> int:
@@ -63,4 +70,7 @@ class Card:
         return self.hp > 0
 
     def end_turn_ability(self) -> None:
+        pass
+
+    def battle_cry_ability(self) -> None:
         pass

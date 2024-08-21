@@ -1,1 +1,1 @@
-ELEMENTS = ["fire", "water", "air", "earth", "light"]
+ELEMENTS = ["fire", "water", "air", "earth", "spirit"]

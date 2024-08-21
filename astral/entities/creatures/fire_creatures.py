@@ -1,5 +1,5 @@
 from astral.entities import Element
-from astral.entities.card import Card
+from astral.entities.creature import Card
 
 
 class Demon(Card):

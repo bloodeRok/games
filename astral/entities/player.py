@@ -25,7 +25,7 @@ class Player:
         self._air = self._elements["air"]
         self._water = self._elements["water"]
         self._earth = self._elements["earth"]
-        self._light = self._elements["light"]
+        self._light = self._elements["spirit"]
         self._portrait = self.create_portrait()
         self._font = pygame.font.SysFont('Arial', 24)
         self._hp = 50
