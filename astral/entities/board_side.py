@@ -1,4 +1,4 @@
-from astral.constants.sizes import CARD_HEIGHT, CARD_DISTANCES
+from astral.constants.sizes import CARD_HEIGHT, CARD_DISTANCE
 from .card_place import CardPlace
 
 
@@ -16,7 +16,7 @@ class BoardSide:
                     y=y
                 )
             )
-            y += CARD_DISTANCES + CARD_HEIGHT
+            y += CARD_DISTANCE + CARD_HEIGHT
 
     def draw(self) -> None:
         for card_place in self.card_places:

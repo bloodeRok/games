@@ -2,7 +2,7 @@ from astral.constants.sizes import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     CARD_WIDTH,
-    CARD_DISTANCES,
+    CARD_DISTANCE,
     CARD_HEIGHT
 )
 from astral.entities import BoardSide
@@ -10,11 +10,11 @@ from astral.entities import BoardSide
 
 class Board:
     def __init__(self):
-        column_height = CARD_HEIGHT * 6 + CARD_DISTANCES * 5
+        column_height = CARD_HEIGHT * 6 + CARD_DISTANCE * 5
         centered_y = (SCREEN_HEIGHT - column_height) // 2
 
-        radiant_x = SCREEN_WIDTH // 2 - CARD_WIDTH - CARD_DISTANCES // 2
-        dire_x = SCREEN_WIDTH // 2 + CARD_DISTANCES // 2
+        radiant_x = SCREEN_WIDTH // 2 - CARD_WIDTH - CARD_DISTANCE // 2
+        dire_x = SCREEN_WIDTH // 2 + CARD_DISTANCE // 2
 
         self.radiant_side = BoardSide(
             x=radiant_x,
