@@ -6,8 +6,8 @@ from astral.game_init import screen
 
 class Portrait:
     def __init__(self, x: int, y: int, portrait_image: str) -> None:
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
         sprite = pygame.image.load(portrait_image).convert()
         self.sprite = pygame.transform.scale(
             sprite,
@@ -15,4 +15,7 @@ class Portrait:
         )
 
     def draw(self) -> None:
-        screen.blit(source=self.sprite, dest=(self.x, self.y))
+        screen.blit(source=self.sprite, dest=(self._x, self._y))
+
+    def get_position(self) -> tuple[int, int]:
+        return self._x, self._y

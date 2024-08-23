@@ -16,14 +16,14 @@ class Mermaid(BaseCreature):
         self._element += 1
 
 
-class Luska(BaseCreature):
+class Naga(BaseCreature):
     def __init__(self, element: BaseElement) -> None:
         super().__init__(
-            name="Luska",
+            name="Naga",
             hp=8,
             attack=9,
             element=element,
-            art=ELEMENT_ART.format(element="water", name="luska")
+            art=ELEMENT_ART.format(element="water", name="naga")
         )
 
 

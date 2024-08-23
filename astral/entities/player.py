@@ -1,7 +1,10 @@
+import random
+import time
+
 import pygame
 
 from astral.base_entities import BaseElement
-from astral.constants.defaults import ELEMENTS
+from astral.constants.defaults import ELEMENTS, ANIMATION_DURATION
 from astral.constants.images import HEROES_IMAGE
 from astral.constants.sizes import (
     BUTTON_DISTANCE,
@@ -13,19 +16,21 @@ from astral.constants.sizes import (
     PORTRAIT_DISTANCE,
     HP_OFFSET,
     HP_RECT_WIDTH,
-    HP_RECT_HEIGHT,
+    HP_RECT_HEIGHT, HP_FONT_HEIGHT,
 )
-from astral.entities import Portrait, Element, EndTurnButton
+from astral.entities import Portrait, Element, EndTurnButton, BoardSide, \
+    CleanBoardButton
 from astral.game_init import screen
 
 
 class Player:
-    def __init__(self, team: str) -> None:
+    def __init__(self, team: str, board_side: BoardSide) -> None:
         if team not in ["dire", "radiant"]:
             raise ValueError("team must be either 'dire' or 'radiant'")
 
         self._my_turn = False
         self._team = team
+        self._board_side = board_side
         self._elements = self.__create_element_buttons()
         self._fire = self._elements["fire"]
         self._air = self._elements["air"]
@@ -33,25 +38,89 @@ class Player:
         self._earth = self._elements["earth"]
         self._spirit = self._elements["spirit"]
         self._portrait = self.__create_portrait()
-        self._font = pygame.font.SysFont('Arial', 24)
+        self._font = pygame.font.SysFont('Arial', HP_FONT_HEIGHT)
         self._end_turn_button = EndTurnButton(team=team)
+        self._clean_board_button = CleanBoardButton(team=team) # TODO test!
+        self._active_card_slot = None
+        self._active_element = None
         self._hp = 50
+
+        self._animating_creature = None
+        self._animation_start_time = None
+        self._start_position = None
+        self._end_position = None
+        self._animation_in_progress = False
 
     def change_hp(self, diff: int) -> None:
         self._hp += diff
 
-    def update(self) -> None:
+    def start_animation(self, creature, start_pos, end_pos):
+        self._animating_creature = creature
+        self._animating_creature.play_summon_sound()
+        self._animation_start_time = time.time()
+        self._start_position = start_pos
+        self._end_position = end_pos
+        self._animation_in_progress = True
 
-        mouse_pos = pygame.mouse.get_pos()
-        mouse_click = pygame.mouse.get_pressed()[0]
-        if mouse_click:
-            for button in self._elements.values():
-                if button.collidepoint(mouse_pos):
-                    self.__unpress_all_elements()
-                    button.press()
+    def update_animation(self):
+        if self._animating_creature and self._animation_start_time:
+            elapsed_time = time.time() - self._animation_start_time
+            progress = min(elapsed_time / ANIMATION_DURATION, 1.0)
+
+            current_x = (1 - progress) * self._start_position[0] + progress * self._end_position[0]
+            current_y = (1 - progress) * self._start_position[1] + progress * self._end_position[1]
+
+            self._animating_creature.draw(current_x, current_y, show_stats=True)
+
+            # Завершение анимации
+            if progress >= 1.0:
+                self._active_card_slot.put_creature(
+                    creature=self._animating_creature
+                )
+                self._active_card_slot.unpress()
+                self._active_card_slot = None
+                self._animating_creature = None
+                self._animation_start_time = None
+                self._animation_in_progress = False
+
+    def update(self, mouse_pos) -> None:
+        if self._animation_in_progress:
+            return
+
+        new_active_card_slot = self._board_side.get_active_card_slot(mouse_pos)
+        if new_active_card_slot:
+            self._active_card_slot = new_active_card_slot
+
+        for element in self._elements.values():
+            if element.collidepoint(mouse_pos):
+                self.__unpress_all_elements()
+                self._active_element = element
+                element.press()
+
+        if self._active_element:
+            collided_creature = self._active_element.menu.get_collided_creature(mouse_pos)
+            if (
+                    collided_creature
+                    and self._active_card_slot
+                    and self._active_card_slot.empty
+            ):
+                print(collided_creature.art)
+
+                new_creature = type(collided_creature)(
+                    element=self._active_element
+                )
+
+                self.start_animation(
+                    creature=new_creature,
+                    start_pos=self._portrait.get_position(),
+                    end_pos=self._active_card_slot.get_position(),
+                )
 
     def end_turn(self) -> None:
+        self._active_element = None
         self.__unpress_all_elements()
+        self._active_card_slot = None
+        self._board_side.unpress_all_card_slots()
         self._my_turn = False
 
     def draw(self) -> None:
@@ -59,11 +128,13 @@ class Player:
             button.draw()
         self._portrait.draw()
         self.__draw_hp()
+        self.update_animation()
         if self._my_turn:
             self._end_turn_button.draw()
+            self._clean_board_button.draw()
 
     # Help methods
-    def __create_element_buttons(self) -> dict[str, BaseElement]:
+    def __create_element_buttons(self) -> dict[str, Element]:
         match self._team:
             case "radiant":
                 x = BUTTON_DISTANCE
@@ -80,7 +151,8 @@ class Player:
                 x=x,
                 y=y,
                 element=element,
-                team=self._team
+                team=self._team,
+                power=random.randint(1, 6)
             )
             y += BUTTON_HEIGHT + BUTTON_DISTANCE
 
@@ -120,20 +192,17 @@ class Player:
         screen.blit(hp_text, text_rect)
 
     def __get_initial_hp_rect_position(self) -> tuple[int, int]:
+        portrait_x, portrait_y = self._portrait.get_position()
         match self._team:
             case "radiant":
                 return (
-                    self._portrait.x
-                    + PORTRAIT_WIDTH
-                    + HP_OFFSET,
-                    self._portrait.y
+                    portrait_x + PORTRAIT_WIDTH + HP_OFFSET,
+                    portrait_y
                 )
             case "dire":
                 return (
-                    self._portrait.x -
-                    HP_RECT_WIDTH -
-                    HP_OFFSET,
-                    self._portrait.y
+                    portrait_x - HP_RECT_WIDTH - HP_OFFSET,
+                    portrait_y
                 )
             case _:
                 return 0, 0
@@ -166,6 +235,15 @@ class Player:
     @property
     def end_turn_button(self) -> EndTurnButton:
         return self._end_turn_button
+
+    @property
+    def clean_board_button(self) -> CleanBoardButton:
+        return self._clean_board_button
+
+    @property
+    def board_side(self) -> BoardSide:
+        return self._board_side
+
 
     @property
     def my_turn(self) -> bool:

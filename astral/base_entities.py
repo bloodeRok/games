@@ -1,17 +1,34 @@
 import pygame
 
-from astral.constants.sizes import CARD_HEIGHT, CARD_WIDTH
+from astral.constants.sizes import (
+    CARD_HEIGHT,
+    CARD_WIDTH,
+    STATS_BORDER_DISTANCE,
+    STATS_FONT_HEIGHT,
+    ELEMENT_POWER_FONT_HEIGHT
+)
+from astral.constants.sounds import SUMMON_SOUNDS
 from astral.game_init import screen
 
 
 class BaseElement:
-    def __init__(self, x: int, y: int, element: str, team: str) -> None:
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            element: str,
+            team: str,
+            power: int
+    ) -> None:
         self._x = x
         self._y = y
         self._element = element
         self._team = team
-        self._power = 3
-        # Логика создания кнопок, меню и других элементов
+        self._power = power
+        self._font_power = pygame.font.SysFont(
+            'Arial',
+            ELEMENT_POWER_FONT_HEIGHT
+        )
 
     def draw(self) -> None:
         # Логика для отрисовки элемента
@@ -60,12 +77,19 @@ class BaseCreature:
         self._max_hp = hp
         self._attack = attack
         self._element = element
-        self._art = pygame.image.load(
+        self.art = pygame.image.load(
                 art
             ).convert()
         self._sprite = pygame.transform.scale(
-            self._art,
+            self.art,
             (CARD_HEIGHT, CARD_WIDTH)
+        )
+        self._font = pygame.font.SysFont('Arial', STATS_FONT_HEIGHT)  # Определение шрифта для текста
+        self._summon_sound = pygame.mixer.Sound(
+            SUMMON_SOUNDS.format(
+                element=self._element.element,
+                name=self._name
+            )
         )
 
     def take_damage(self, amount: int) -> None:
@@ -74,7 +98,7 @@ class BaseCreature:
             self._hp = 0
 
     def is_alive(self) -> bool:
-        return self.hp > 0
+        return self._hp > 0
 
     def attack_ability(self) -> None:
         pass
@@ -86,7 +110,59 @@ class BaseCreature:
         pass
 
     def draw(self, x: int, y: int, show_stats: bool = False) -> None:
+        # Отображаем карту
         screen.blit(source=self._sprite, dest=(x, y))
+
+        if show_stats:
+            attack_text = f"ATK: {self._attack}"
+            hp_text = f"HP: {self._hp}/{self._max_hp}"
+            attack_width, attack_height = self._font.size(attack_text)
+            hp_width, hp_height = self._font.size(hp_text)
+
+            # Рендеринг черного прямоугольника для атаки
+            attack_rect = pygame.Rect(
+                x + STATS_BORDER_DISTANCE,
+                y + CARD_HEIGHT - attack_height - STATS_BORDER_DISTANCE,
+                attack_width,
+                attack_height
+            )
+            pygame.draw.rect(screen, (0, 0, 0), attack_rect)
+
+            # Рендеринг текста для атаки
+            attack_render = self._font.render(
+                attack_text,
+                True,
+                (255, 0, 0)
+            )
+            attack_pos = (
+                x + STATS_BORDER_DISTANCE,
+                y + CARD_HEIGHT - attack_height - STATS_BORDER_DISTANCE
+            )
+            screen.blit(attack_render, attack_pos)
+
+            # Рендеринг черного прямоугольника для здоровья
+            hp_rect = pygame.Rect(
+                x + CARD_WIDTH - hp_width - STATS_BORDER_DISTANCE,
+                y + CARD_HEIGHT - hp_height - STATS_BORDER_DISTANCE,
+                hp_width,
+                hp_height
+            )
+            pygame.draw.rect(screen, (0, 0, 0), hp_rect)
+
+            # Рендеринг текста для здоровья
+            hp_render = self._font.render(
+                hp_text,
+                True,
+                (0, 255, 0)
+            )
+            hp_pos = (
+                x + CARD_WIDTH - hp_width - STATS_BORDER_DISTANCE,
+                y + CARD_HEIGHT - hp_height - STATS_BORDER_DISTANCE,
+            )
+            screen.blit(hp_render, hp_pos)
+
+    def play_summon_sound(self) -> None:
+        self._summon_sound.play()
 
     # Getters/setters
     @property

@@ -19,7 +19,7 @@ class AstralChanneler(BaseCreature):
 class Ghost(BaseCreature):
     def __init__(self, element: BaseElement) -> None:
         super().__init__(
-            name="Bear",
+            name="Ghost",
             hp=12,
             attack=5,
             element=element,

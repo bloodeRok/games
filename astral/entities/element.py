@@ -1,6 +1,6 @@
 import pygame
 
-from astral.base_entities import BaseElement
+from astral.base_entities import BaseElement, BaseCreature
 from astral.constants.images import (
     ELEMENT_BUTTON_IMAGE,
     ELEMENT_BUTTON_PRESSED_IMAGE,
@@ -31,16 +31,70 @@ from astral.entities.creatures.spirit_creatures import (
 )
 from astral.entities.creatures.water_creatures import (
     Mermaid,
-    Luska,
+    Naga,
     Undine,
     WaterElemental,
 )
 from astral.game_init import screen
 
 
+class ElementMenu:
+    def __init__(
+            self,
+            team: str,
+            creatures,
+            element
+    ) -> None:
+
+        self.creatures = []
+        match team:
+            case "radiant":
+                left_top_x = BUTTON_DISTANCE + BUTTON_WIDTH + MENU_CARD_DISTANCE
+            case "dire":
+                left_top_x = (
+                        SCREEN_WIDTH - BUTTON_WIDTH -
+                        BUTTON_DISTANCE - CARD_WIDTH * 2
+                        - MENU_CARD_DISTANCE * 2
+                )
+            case _:
+                left_top_x = 0
+
+        left_top_y = (
+                (SCREEN_HEIGHT - (
+                        BUTTON_HEIGHT + BUTTON_DISTANCE
+                ) * 5) // 2
+        )
+
+        for i, CreatureClass in enumerate(creatures):
+            x = left_top_x + (i % 2) * (CARD_WIDTH + MENU_CARD_DISTANCE)
+            y = left_top_y + (i // 2) * (CARD_HEIGHT + MENU_CARD_DISTANCE)
+            creature = CreatureClass(element)
+            self.creatures.append((creature, x, y))
+
+    def draw(self) -> None:
+        for creature, x, y in self.creatures:
+            creature.draw(x, y)
+
+    def get_collided_creature(
+            self,
+            pos: tuple[int, int]
+    ) -> None | BaseCreature:
+        for creature, x, y in self.creatures:
+            if x <= pos[0] <= x + CARD_WIDTH and y <= pos[1] <= y + CARD_HEIGHT:
+                return creature
+        return None
+
+
 class Element(BaseElement):
-    def __init__(self, x: int, y: int, element: str, team: str) -> None:
-        super().__init__(x, y, element, team)
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            element: str,
+            team: str,
+            power: int
+    ) -> None:
+        super().__init__(x, y, element, team, power)
         self._pressed = False
         self._button_image = pygame.image.load(
             ELEMENT_BUTTON_IMAGE.format(element=self._element)
@@ -55,7 +109,7 @@ class Element(BaseElement):
             creatures=self._creatures,
             element=self
         )
-        self._font_power = pygame.font.SysFont('Arial', 18)
+
 
     def __get_random_creatures(self):
         creatures_classes = []
@@ -63,7 +117,7 @@ class Element(BaseElement):
             case "fire":
                 creatures_classes = [Demon, Phoenix, WallOfFire, FireElemental]
             case "water":
-                creatures_classes = [Mermaid, Luska, Undine, WaterElemental]
+                creatures_classes = [Mermaid, Naga, Undine, WaterElemental]
             case "air":
                 creatures_classes = [AirPriest, Griffin, Harpy, AirElemental]
             case "earth":
@@ -123,40 +177,7 @@ class Element(BaseElement):
     def __draw_element_menu(self) -> None:
         self._menu.draw()
 
-
-class ElementMenu:
-    def __init__(
-            self,
-            team: str,
-            creatures,
-            element
-    ) -> None:
-
-        self.creatures = []
-        match team:
-            case "radiant":
-                left_top_x = BUTTON_DISTANCE + BUTTON_WIDTH + MENU_CARD_DISTANCE
-            case "dire":
-                left_top_x = (
-                        SCREEN_WIDTH - BUTTON_WIDTH -
-                        BUTTON_DISTANCE - CARD_WIDTH * 2
-                        - MENU_CARD_DISTANCE * 2
-                )
-            case _:
-                left_top_x = 0
-
-        left_top_y = (
-                (SCREEN_HEIGHT - (
-                        BUTTON_HEIGHT + BUTTON_DISTANCE
-                ) * 5) // 2
-        )
-
-        for i, CreatureClass in enumerate(creatures):
-            x = left_top_x + (i % 2) * (CARD_WIDTH + MENU_CARD_DISTANCE)
-            y = left_top_y + (i // 2) * (CARD_HEIGHT + MENU_CARD_DISTANCE)
-            creature = CreatureClass(element)
-            self.creatures.append((creature, x, y))
-
-    def draw(self) -> None:
-        for creature, x, y in self.creatures:
-            creature.draw(x, y)
+    # Getters
+    @property
+    def menu(self) -> ElementMenu:
+        return self._menu

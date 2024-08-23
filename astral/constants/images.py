@@ -1,6 +1,7 @@
 IMAGES_DIR = "img/"
 
 CARD_PLACE_IMAGE = IMAGES_DIR + "card_place.png"
+CARD_PLACE_IMAGE_PRESSED = IMAGES_DIR + "card_place_pressed.png"
 
 END_TURN_IMAGE = IMAGES_DIR + "end_turn.png"
 
